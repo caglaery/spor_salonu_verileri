@@ -32,8 +32,8 @@ insert into @Isimler values
 
 declare @Soyadlar table (Soyad nvarchar(50));
 insert into @Soyadlar values
-('ﬁEN'),('DEM›R'),('ASLAN'),('AKTAﬁ'),('ERDEM'),('G‹NEﬁ'),('YILMAZ'),('KAYA'),('TUN«'),('÷ZER'),
-('YAVUZ'),('SEZER'),('TEK›N'),('AYHAN'),('÷NER'),('AYTA«'),('ATAY'),('YILDIZ')
+('√ûEN'),('DEM√ùR'),('ASLAN'),('AKTA√û'),('ERDEM'),('G√úNE√û'),('YILMAZ'),('KAYA'),('TUN√á'),('√ñZER'),
+('YAVUZ'),('SEZER'),('TEK√ùN'),('AYHAN'),('√ñNER'),('AYTA√á'),('ATAY'),('YILDIZ')
 
 declare @StartDate DATE = '2020-01-01';
 declare @EndDate DATE ='2024-01-01';
@@ -53,7 +53,7 @@ set @i=@i+1;
 end
 
 INSERT INTO SPORLAR(spor_adi,spor_zorluk)
-VALUES ('DAYANIKLILIK ANTREMANLARI','›LER› SEV›YE')
+VALUES ('DAYANIKLILIK ANTREMANLARI','√ùLER√ù SEV√ùYE')
 ALTER TABLE spor_katilim
 ADD haftalik_katilim int;
 declare @i int =1;
@@ -77,21 +77,21 @@ as
 begin
 SELECT top 5
 s.spor_adi,
-COUNT (sk.katilim_id) Toplam_Kat˝l˝mc˝lar
+COUNT (sk.katilim_id) Toplam_Kat√Ωl√Ωmc√Ωlar
 From spor_katilim sk
 join 
 SPORLAR s on sk.spor_id=s.spor_id
 group by
 s.spor_adi
 order by 
-Toplam_Kat˝l˝mc˝lar desc;
+Toplam_Kat√Ωl√Ωmc√Ωlar desc;
 end
  EXEC dbo.sp_EnCokTercihEdilen
  
  create nonclustered index IX_SPOR 
  on SPORLAR (spor_adi)
  set statistics IO ON
- select * from SPORLAR WHERE spor_adi='Y‹ZME'
+ select * from SPORLAR WHERE spor_adi='Y√úZME'
  CREATE NONCLUSTERED INDEX IX_ADSOYAD ON UYELER(uye_adi,uye_soyadi);
 
  CREATE VIEW vw_uyebilgi2
