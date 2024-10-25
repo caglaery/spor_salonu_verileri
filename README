@@ -1,0 +1,167 @@
+# Spor Salonu Veritabanı Projesi
+
+## Proje Tanımı
+**Spor Salonu Veritabanı Projesi**, bir spor salonunun üyeleri, spor programları ve katılımlarını yönetmeyi amaçlayan bir sistemdir. Üyelerin bilgilerini ve katılım verilerini toplayarak, spor salonu yönetimine veri analizi imkanı sunar.
+
+## Amaçlar
+
+### Üye Yönetimi
+Üyelerin bilgilerini güvenli bir şekilde depolamak ve analiz etmek.
+
+### Spor Programları Yönetimi
+Spor aktivitelerini tanımlamak ve üyelerin ihtiyaçlarına uygun programlar sunmak.
+
+### Katılım Analizi
+Üyelerin hangi spor programlarına katıldığını ve katılım sıklığını incelemek.
+
+### Veri Analizi ve Raporlama
+Katılım verilerini analiz ederek, raporlar oluşturmak ve stratejik kararlar almak.
+
+## Veri Analizi
+Veri analizi ile:
+- **Katılım Sıklığı** ve **En Çok Tercih Edilen Sporlar** belirlenir.
+- Üyelerin **demografik bilgileri** incelenir.
+- Zaman içindeki **katılım trendleri** izlenir.
+
+## Sonuç
+Bu proje, spor salonu yöneticilerine veri odaklı kararlar alarak müşteri memnuniyetini artırma imkanı tanır. Veritabanı, spor salonunun performansını iyileştirmek ve stratejileri geliştirmek için kritik bir kaynak sağlar.
+
+-- Veritabanı Oluşturma
+CREATE DATABASE SporSalonu;
+USE SporSalonu;
+
+-- Üyeler Tablosu
+CREATE TABLE UYELER (
+    uye_id INT PRIMARY KEY IDENTITY(1,1),
+    uye_adi NVARCHAR(50),
+    uye_soyadi NVARCHAR(50),
+    uyelik_baslangic DATE
+);
+
+-- Üyeler Tablosuna E-posta Alanı Ekleme
+ALTER TABLE UYELER 
+ADD uye_email NVARCHAR(100);
+
+-- Sporlar Tablosu
+CREATE TABLE SPORLAR (
+    spor_id INT PRIMARY KEY IDENTITY(1,1),
+    spor_adi NVARCHAR(70),
+    spor_zorluk NVARCHAR(20)
+);
+
+-- Spor Katılım Tablosu
+CREATE TABLE spor_katilim (
+    katilim_id INT PRIMARY KEY IDENTITY(1,1),
+    uye_id INT FOREIGN KEY REFERENCES UYELER (uye_id),
+    spor_id INT FOREIGN KEY REFERENCES SPORLAR (spor_id),
+    katilim_tarihi DATE,
+    haftalik_katilim INT
+);
+
+-- Rastgele Üye Verisi Oluşturma
+DECLARE @i INT = 1;
+DECLARE @Ad NVARCHAR(50);
+DECLARE @Soyad NVARCHAR(50);
+DECLARE @Tarih DATE;
+DECLARE @Email NVARCHAR(100);
+
+-- İsimler Tablosu
+DECLARE @Isimler TABLE (Ad NVARCHAR(50));
+INSERT INTO @Isimler VALUES 
+('Ahmet'), ('Ali'), ('Damla'), ('Meltem'), ('Faruk'),
+('Fulya'), ('Cengiz'), ('Hasan'), ('Hazal'), ('Aysu'),
+('Cansel'), ('Hande'), ('Mert'), ('Mehmet'), ('Pelin'),
+('Ata'), ('Elif'), ('Zeynep');
+
+-- Soyadlar Tablosu
+DECLARE @Soyadlar TABLE (Soyad NVARCHAR(50));
+INSERT INTO @Soyadlar VALUES
+('ŞEN'), ('DEMİR'), ('ASLAN'), ('AKTAŞ'), ('ERDEM'),
+('GÜNEŞ'), ('YILMAZ'), ('KAYA'), ('TUNÇ'), ('ÖZER'),
+('YAVUZ'), ('SEZER'), ('TEKİN'), ('AYHAN'), ('ÖNER'),
+('AYTAÇ'), ('ATAY'), ('YILDIZ');
+
+DECLARE @StartDate DATE = '2020-01-01';
+DECLARE @EndDate DATE = '2024-01-01';
+DECLARE @TotalDays INT = DATEDIFF(DAY, @StartDate, @EndDate);
+
+-- 100,000 Üye Oluşturma
+WHILE @i <= 100000
+BEGIN 
+    SELECT TOP 1 @Ad = Ad FROM @Isimler ORDER BY NEWID();
+    SELECT TOP 1 @Soyad = Soyad FROM @Soyadlar ORDER BY NEWID();
+
+    SET @Email = LOWER(@Ad) + '.' + LOWER(@Soyad) + CAST(@i AS NVARCHAR(10)) + '@example.com';
+    SET @Tarih = DATEADD(DAY, FLOOR(RAND() * @TotalDays), @StartDate);
+
+    INSERT INTO UYELER (uye_adi, uye_soyadi, uyelik_baslangic, uye_email)
+    VALUES (@Ad, @Soyad, @Tarih, @Email);
+
+    SET @i = @i + 1;
+END;
+
+-- Sporlar Tablosuna Veri Ekleme
+INSERT INTO SPORLAR (spor_adi, spor_zorluk)
+VALUES ('DAYANIKLILIK ANTREMANLARI', 'İLERİ SEVİYE');
+
+-- Spor Katılım Tablosuna Veri Oluşturma
+DECLARE @j INT = 1;
+DECLARE @Uyeid INT;
+DECLARE @Sporid INT;
+DECLARE @katilim INT;
+
+WHILE @j <= 100000
+BEGIN
+    SET @Uyeid = FLOOR(RAND() * 100000) + 1;
+    SET @Sporid = FLOOR(RAND() * 24) + 1;
+    SET @katilim = FLOOR(RAND() * 7) + 1;
+
+    INSERT INTO spor_katilim (uye_id, spor_id, haftalik_katilim)
+    VALUES (@Uyeid, @Sporid, @katilim);
+    
+    SET @j = @j + 1;
+END;
+
+-- Üye Sayısını Gösterme
+SELECT COUNT(*) FROM UYELER;
+
+-- En Çok Tercih Edilen Sporlar İçin Saklı Prosedür
+CREATE PROCEDURE dbo.sp_EnCokTercihEdilen
+AS
+BEGIN
+    SELECT TOP 5
+        s.spor_adi,
+        COUNT(sk.katilim_id) AS Toplam_Katılımcılar
+    FROM spor_katilim sk
+    JOIN SPORLAR s ON sk.spor_id = s.spor_id
+    GROUP BY s.spor_adi
+    ORDER BY Toplam_Katılımcılar DESC;
+END;
+
+-- Saklı Prosedürü Çalıştırma
+EXEC dbo.sp_EnCokTercihEdilen;
+
+-- Sporlar Tablosu Üzerinde Kümelenmemiş İndeks Oluşturma
+CREATE NONCLUSTERED INDEX IX_SPOR ON SPORLAR (spor_adi);
+SET STATISTICS IO ON;
+SELECT * FROM SPORLAR WHERE spor_adi = 'YÜZME';
+
+-- Üyeler Tablosu Üzerinde Kümelenmemiş İndeks Oluşturma
+CREATE NONCLUSTERED INDEX IX_ADSOYAD ON UYELER (uye_adi, uye_soyadi);
+
+-- Üye Bilgilerini Gösteren Görünüm Oluşturma
+CREATE VIEW vw_uyebilgi2 AS
+SELECT TOP 20
+    u.uye_id,
+    u.uye_adi,
+    u.uye_soyadi,
+    s.spor_adi
+FROM
+    UYELER u
+JOIN
+    spor_katilim sk ON u.uye_id = sk.uye_id
+JOIN
+    SPORLAR s ON sk.spor_id = s.spor_id;
+
+-- Görünümden Veri Seçme
+SELECT * FROM vw_uyebilgi2;
